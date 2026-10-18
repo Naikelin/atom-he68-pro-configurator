@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ATOM HE68 PRO Configurator</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>ATOM HE68 PRO Configurator</h1>
+    <div id="status">Disconnected</div>
+    <div class="header-actions">
+      <button id="btn-connect">Connect</button>
+      <button id="btn-disconnect" disabled>Disconnect</button>
+      <button id="btn-refresh">Refresh keymaps</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="keyboard">
+      <div id="key-grid"></div>
+    </section>
+
+    <aside id="sidebar">
+      <h2>Key editor</h2>
+      <p id="selected-info">Select a key to edit.</p>
+
+      <label for="layer-select">Layer:</label>
+      <select id="layer-select">
+        <option value="base">Base</option>
+        <option value="fn">Fn</option>
+      </select>
+
+      <label for="usage-select">Binding:</label>
+      <input id="usage-search" list="usages-list" placeholder="Search key (e.g. F1, Delete)">
+      <datalist id="usages-list"></datalist>
+
+      <div class="actions">
+        <button id="btn-assign" disabled>Assign</button>
+        <button id="btn-clear" disabled>Clear</button>
+      </div>
+
+      <hr>
+
+      <h2>Presets</h2>
+      <button id="btn-fkeys">Apply Fn + 1..= → F1..F12</button>
+
+      <hr>
+
+      <h2>Pending changes</h2>
+      <ul id="pending-list"></ul>
+      <button id="btn-save" disabled>Save to keyboard</button>
+    </aside>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
