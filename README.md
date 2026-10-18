@@ -4,6 +4,8 @@ Unofficial configurator for the Fantech ATOM HE68 PRO (MK922). Includes a Python
 
 Based on reverse-engineering work by [Sinshro/fantech-atom-he68-pro](https://github.com/Sinshro/fantech-atom-he68-pro) (MIT license).
 
+> **License:** This project is licensed under the GNU General Public License v3.0 or later (GPL-3.0+). The desktop app bundles the [VIA](https://github.com/the-via/app) frontend, which is also GPL-3.0.
+
 ## Features
 
 - Web UI editor for base and Fn layers (VIA-like).
