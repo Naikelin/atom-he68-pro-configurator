@@ -106,6 +106,29 @@ func (a *App) Battery() (int, error) {
 	return a.device.Battery()
 }
 
+// HIDCommand emulates the VIA protocol for the VIA frontend.
+// It accepts a VIA command ID and payload bytes, and returns the response bytes.
+func (a *App) HIDCommand(command int, payload []int) ([]int, error) {
+	if !a.device.Connected() {
+		if err := a.device.Connect(); err != nil {
+			return nil, err
+		}
+	}
+	payloadBytes := make([]byte, len(payload))
+	for i, v := range payload {
+		payloadBytes[i] = byte(v)
+	}
+	resp, err := a.device.HIDCommand(byte(command), payloadBytes)
+	if err != nil {
+		return nil, err
+	}
+	respInts := make([]int, len(resp))
+	for i, v := range resp {
+		respInts[i] = int(v)
+	}
+	return respInts, nil
+}
+
 func applyBindings(table []byte, bindings map[int]string) error {
 	for addr, name := range bindings {
 		usage, ok := hid.HIDUsages[name]

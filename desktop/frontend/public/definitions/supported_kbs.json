@@ -1,0 +1,13 @@
+{
+  "generatedAt": 0,
+  "version": "3.0.0",
+  "theme": {
+    "name": "OLIVIA_DARK",
+    "accentColor": "#ad7070"
+  },
+  "accentColor": "#ad7070",
+  "vendorProductIds": {
+    "v2": [],
+    "v3": [205861068]
+  }
+}

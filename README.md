@@ -8,8 +8,8 @@ Based on reverse-engineering work by [Sinshro/fantech-atom-he68-pro](https://git
 
 ## Features
 
-- Web UI editor for base and Fn layers (VIA-like).
-- Read and write keymaps through the HID protocol.
+- **Real VIA frontend** bundled inside a native Wails app, configured to talk to the HE68 PRO.
+- Read and write base and Fn layer keymaps through the HID protocol.
 - One-click preset to set **Fn + 1..=** → **F1..F12**.
 - Python library and CLI scripts.
 
@@ -59,7 +59,8 @@ wails build
 The executable will be at `desktop/build/bin/atom-he68-configurator.exe`.
 
 Features:
-- Native window with VIA-like keymap editor.
+- Native window with the real **VIA** keymap editor.
+- Go backend translates VIA/QMK keycodes to the Fantech HID protocol.
 - System tray icon showing battery level.
 - One-click Fn+F-keys preset.
 

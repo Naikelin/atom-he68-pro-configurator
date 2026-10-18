@@ -1,62 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ATOM HE68 PRO Configurator</title>
+  <meta charset="utf-8" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#dadada">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Your keyboard's best friend" />
+  <meta data-react-helmet="true" property="og:image" content="/android-chrome-512x512.png">
+  <meta data-react-helmet="true" property="twitter:image" content="https://usevia.app/images/chippy.png">
+  <meta data-react-helmet="true" http-equiv="x-ua-compatible" content="ie=edge">
+  <meta data-react-helmet="true" property="og:title" content="VIA">
+  <meta data-react-helmet="true" name="description" content="Your keyboard&#x27;s best friend">
+  <meta data-react-helmet="true" property="og:description" content="Your keyboard&#x27;s best friend">
+  <meta data-react-helmet="true" name="twitter:card" content="summary">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fira+Sans+Condensed:wght@300;400;500&family=Fira+Sans:wght@300;400&display=swap"
+    rel="stylesheet">
+  <title>VIA</title>
+  <script id="definition_hash" data-hash=<%-hash%>></script>
 </head>
+
 <body>
-  <div id="app">
-    <header>
-      <h1>ATOM HE68 PRO Configurator</h1>
-      <div class="status-bar">
-        <span id="status">Disconnected</span>
-        <span id="battery"></span>
-      </div>
-      <div class="header-actions">
-        <button id="btn-connect">Connect</button>
-        <button id="btn-disconnect" disabled>Disconnect</button>
-        <button id="btn-refresh">Refresh</button>
-      </div>
-    </header>
+  <div id="root"></div>
+  <noscript>You need to enable JavaScript to run this app.</noscript>
+  <script type="module" src="/src/index.tsx"></script>
+  <!--
+      This HTML file is a template.
+      If you open it directly in the browser, you will see an empty page.
 
-    <main>
-      <section id="keyboard">
-        <div id="key-grid"></div>
-      </section>
+      You can add webfonts, meta tags, or analytics to this file.
+      The build step will place the bundled scripts into the <body> tag.
 
-      <aside id="sidebar">
-        <h2>Key editor</h2>
-        <p id="selected-info">Select a key to edit.</p>
-
-        <label for="layer-select">Layer</label>
-        <select id="layer-select">
-          <option value="base">Base</option>
-          <option value="fn">Fn</option>
-        </select>
-
-        <label for="usage-search">Binding</label>
-        <input id="usage-search" list="usages-list" placeholder="e.g. F1">
-        <datalist id="usages-list"></datalist>
-
-        <div class="actions">
-          <button id="btn-assign" disabled>Assign</button>
-          <button id="btn-clear" disabled>Clear</button>
-        </div>
-
-        <hr>
-
-        <h2>Presets</h2>
-        <button id="btn-fkeys">Apply Fn + 1..= → F1..F12</button>
-
-        <hr>
-
-        <h2>Pending changes</h2>
-        <ul id="pending-list"></ul>
-        <button id="btn-save" disabled>Save to keyboard</button>
-      </aside>
-    </main>
-  </div>
-  <script type="module" src="/src/main.ts"></script>
+      To begin the development, run `npm start` or `yarn start`.
+      To create a production bundle, use `npm run build` or `yarn build`.
+    -->
 </body>
+
 </html>

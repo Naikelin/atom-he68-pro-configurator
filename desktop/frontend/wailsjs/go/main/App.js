@@ -38,6 +38,10 @@ export function GetUsages() {
   return window['go']['main']['App']['GetUsages']();
 }
 
+export function HIDCommand(arg1, arg2) {
+  return window['go']['main']['App']['HIDCommand'](arg1, arg2);
+}
+
 export function SetBaseKeymap(arg1) {
   return window['go']['main']['App']['SetBaseKeymap'](arg1);
 }

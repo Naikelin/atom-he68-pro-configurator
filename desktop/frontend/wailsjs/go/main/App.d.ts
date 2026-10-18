@@ -20,6 +20,8 @@ export function GetLayout():Promise<Array<hid.PhysicalKey>>;
 
 export function GetUsages():Promise<Record<string, number>>;
 
+export function HIDCommand(arg1:number,arg2:Array<number>):Promise<Array<number>>;
+
 export function SetBaseKeymap(arg1:Record<number, string>):Promise<void>;
 
 export function SetFnKeymap(arg1:Record<number, string>):Promise<void>;
