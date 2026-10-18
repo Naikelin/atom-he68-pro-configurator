@@ -21,6 +21,10 @@ func NewApp() *App {
 // startup is called at application startup.
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
+	// Try to open the keyboard early so VIA can detect it immediately.
+	if err := a.device.Connect(); err != nil {
+		fmt.Println("Keyboard not connected at startup:", err)
+	}
 	StartTray(a)
 }
 
@@ -35,8 +39,12 @@ func (a *App) Disconnect() error {
 }
 
 // Connected returns whether the keyboard is connected.
+// If the handle is closed, it attempts to reconnect.
 func (a *App) Connected() bool {
-	return a.device.Connected()
+	if a.device.Connected() {
+		return true
+	}
+	return a.device.Connect() == nil
 }
 
 // GetLayout returns the 68-key physical layout.

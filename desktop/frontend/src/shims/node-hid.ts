@@ -45,6 +45,7 @@ const ExtendedHID = {
     }
     const device = {
       _device: {} as HIDDevice,
+      __path: DEVICE_PATH,
       interface: 0x0001,
       vendorId: DEVICE_INFO.vendorId,
       productId: DEVICE_INFO.productId,
