@@ -1,6 +1,6 @@
 # ATOM HE68 PRO Configurator
 
-Unofficial web configurator for the Fantech ATOM HE68 PRO (MK922).
+Unofficial configurator for the Fantech ATOM HE68 PRO (MK922). Includes a Python prototype and a native Windows desktop app built with Wails.
 
 Based on reverse-engineering work by [Sinshro/fantech-atom-he68-pro](https://github.com/Sinshro/fantech-atom-he68-pro) (MIT license).
 
@@ -45,9 +45,26 @@ Then open http://localhost:8000 in a Chromium-based browser.
 - Do not run this while the official Fantech configurator is open; only one app can own the vendor HID endpoint.
 - Test changes on hardware you control and keep backups of working configurations.
 
+## Desktop app (Wails + Go + TypeScript)
+
+The native desktop app is in `desktop/`.
+
+```powershell
+cd desktop
+wails build
+```
+
+The executable will be at `desktop/build/bin/desktop.exe`.
+
+Features:
+- Native window with VIA-like keymap editor.
+- System tray icon showing battery level.
+- One-click Fn+F-keys preset.
+
 ## Project structure
 
-- `src/atom_he68/` — Python library (HID transport, protocol, keymap API).
-- `web/` — Static frontend.
+- `desktop/` — Wails desktop app (Go backend + TypeScript frontend).
+- `src/atom_he68/` — Python prototype library.
+- `web/` — Static frontend for the Python prototype.
 - `scripts/` — CLI utilities.
 - `docs/` — Protocol notes.

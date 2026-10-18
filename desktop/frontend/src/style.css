@@ -1,26 +1,165 @@
-html {
-    background-color: rgba(27, 38, 54, 1);
-    text-align: center;
-    color: white;
+:root {
+  --bg: #0f1115;
+  --panel: #181b21;
+  --text: #e0e2e6;
+  --muted: #9aa0a6;
+  --accent: #4cc9f0;
+  --accent-hover: #72d7f7;
+  --danger: #f72585;
+  --key-bg: #252a33;
+  --key-border: #3a404d;
 }
+
+* { box-sizing: border-box; }
 
 body {
-    margin: 0;
-    color: white;
-    font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
-    "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-    sans-serif;
-}
-
-@font-face {
-    font-family: "Nunito";
-    font-style: normal;
-    font-weight: 400;
-    src: local(""),
-    url("assets/fonts/nunito-v16-latin-regular.woff2") format("woff2");
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
 }
 
 #app {
-    height: 100vh;
-    text-align: center;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--panel);
+  border-bottom: 1px solid var(--key-border);
+}
+
+header h1 { margin: 0; font-size: 1.1rem; flex: 1; }
+
+.status-bar {
+  display: flex;
+  gap: 1rem;
+  font-weight: 600;
+}
+#status { color: var(--danger); }
+#status.connected { color: #2ecc71; }
+#battery { color: var(--accent); }
+
+.header-actions { display: flex; gap: 0.5rem; }
+
+main {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  flex: 1;
+  overflow: hidden;
+}
+
+#keyboard {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  overflow: auto;
+}
+
+#key-grid {
+  position: relative;
+  width: 16.8rem;
+  height: 5.25rem;
+  transform-origin: top left;
+  transform: scale(3.2);
+}
+
+.key {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  background: var(--key-bg);
+  border: 1px solid var(--key-border);
+  border-radius: 0.2rem;
+  font-size: 0.22rem;
+  cursor: pointer;
+  user-select: none;
+  overflow: hidden;
+  padding: 0.1rem;
+}
+
+.key:hover { border-color: var(--accent); }
+.key.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.key .label { font-weight: 700; }
+.key .binding {
+  font-size: 0.18rem;
+  color: var(--muted);
+  margin-top: 0.05rem;
+}
+
+#sidebar {
+  background: var(--panel);
+  border-left: 1px solid var(--key-border);
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+#sidebar h2 {
+  margin-top: 0;
+  font-size: 1rem;
+}
+
+#sidebar label {
+  display: block;
+  margin-top: 0.75rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+#sidebar input,
+#sidebar select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--key-border);
+  border-radius: 0.35rem;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.actions { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
+
+button {
+  background: var(--accent);
+  color: #000;
+  border: none;
+  border-radius: 0.35rem;
+  padding: 0.55rem 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) { background: var(--accent-hover); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+#pending-list {
+  list-style: none;
+  padding: 0;
+  max-height: 10rem;
+  overflow: auto;
+}
+
+#pending-list li {
+  font-size: 0.8rem;
+  padding: 0.2rem 0;
+  border-bottom: 1px solid var(--key-border);
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--key-border);
+  margin: 1rem 0;
 }
