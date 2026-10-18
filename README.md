@@ -54,7 +54,7 @@ cd desktop
 wails build
 ```
 
-The executable will be at `desktop/build/bin/desktop.exe`.
+The executable will be at `desktop/build/bin/atom-he68-configurator.exe`.
 
 Features:
 - Native window with VIA-like keymap editor.
