@@ -86,6 +86,32 @@ func (d *Device) HIDCommand(command byte, payload []byte) ([]byte, error) {
 	case 0x11: // DYNAMIC_KEYMAP_GET_LAYER_COUNT
 		return []byte{command, VIALayerCount}, nil
 
+	// The HE68 PRO has no VIA-accessible macro storage; report an empty
+	// macro area so VIA initialises cleanly instead of erroring out.
+	case 0x0c: // DYNAMIC_KEYMAP_MACRO_GET_COUNT
+		return []byte{command, 0}, nil
+
+	case 0x0d: // DYNAMIC_KEYMAP_MACRO_GET_BUFFER_SIZE
+		return []byte{command, 0, 0}, nil
+
+	case 0x0e: // DYNAMIC_KEYMAP_MACRO_GET_BUFFER
+		size := 0
+		if len(payload) >= 3 {
+			size = int(payload[2])
+		}
+		res := make([]byte, 4+size)
+		res[0] = command
+		if len(payload) >= 3 {
+			res[1], res[2], res[3] = payload[0], payload[1], payload[2]
+		}
+		return res, nil
+
+	case 0x0f: // DYNAMIC_KEYMAP_MACRO_SET_BUFFER
+		return append([]byte{command}, payload...), nil
+
+	case 0x10: // DYNAMIC_KEYMAP_MACRO_RESET
+		return []byte{command}, nil
+
 	case 0x04: // DYNAMIC_KEYMAP_GET_KEYCODE
 		if len(payload) < 3 {
 			return nil, fmt.Errorf("%w: get keycode payload too short", ErrProtocol)
@@ -113,29 +139,28 @@ func (d *Device) HIDCommand(command byte, payload []byte) ([]byte, error) {
 		if len(payload) < 3 {
 			return nil, fmt.Errorf("%w: get buffer payload too short", ErrProtocol)
 		}
-		layer := int(payload[0])
-		offset := int(binary.BigEndian.Uint16(payload[1:3]))
-		size := int(payload[3])
-		data, err := d.GetVIAKeymapBuffer(layer, offset, size)
+		offset := int(binary.BigEndian.Uint16(payload[0:2]))
+		size := int(payload[2])
+		data, err := d.GetVIAKeymapBuffer(offset, size)
 		if err != nil {
 			return nil, err
 		}
-		return append([]byte{command, payload[0], payload[1], payload[2], payload[3]}, data...), nil
+		// VIA expects 4 header bytes + data
+		return append([]byte{command, payload[0], payload[1], payload[2]}, data...), nil
 
 	case 0x13: // DYNAMIC_KEYMAP_SET_BUFFER
-		if len(payload) < 4 {
+		if len(payload) < 3 {
 			return nil, fmt.Errorf("%w: set buffer payload too short", ErrProtocol)
 		}
-		layer := int(payload[0])
-		offset := int(binary.BigEndian.Uint16(payload[1:3]))
-		size := int(payload[3])
-		if len(payload) < 4+size {
+		offset := int(binary.BigEndian.Uint16(payload[0:2]))
+		size := int(payload[2])
+		if len(payload) < 3+size {
 			return nil, fmt.Errorf("%w: set buffer data too short", ErrProtocol)
 		}
-		if err := d.SetVIAKeymapBuffer(layer, offset, payload[4:4+size]); err != nil {
+		if err := d.SetVIAKeymapBuffer(offset, payload[3:3+size]); err != nil {
 			return nil, err
 		}
-		return append([]byte{command}, payload...), nil
+		return append([]byte{command, payload[0], payload[1], payload[2]}, payload[3:3+size]...), nil
 
 	case 0x02: // GET_KEYBOARD_VALUE
 		// Return a 33-byte HID report (matching VIA's packet size).
@@ -221,23 +246,45 @@ func (d *Device) SetVIAKeycode(layer, row, col int, keycode uint16) error {
 	return d.setLayerTable(layer, table)
 }
 
-// GetVIAKeymapBuffer reads a chunk of the VIA keymap buffer for a layer.
-func (d *Device) GetVIAKeymapBuffer(layer, offset, size int) ([]byte, error) {
-	if offset < 0 || size < 0 || offset+size > VIARows*VIACols*2 {
+// viaLayerBytes is the size in bytes of a single layer's flat keymap.
+const viaLayerBytes = VIARows * VIACols * 2
+
+// viaFullBytes is the size in bytes of the whole flat keymap (all layers).
+const viaFullBytes = VIALayerCount * viaLayerBytes
+
+// absToCell maps an absolute byte offset in the flat keymap buffer to the
+// layer, row and column it belongs to. Each keycode is two bytes, so the
+// layer boundary (150) is even and a pair never straddles two layers.
+func absToCell(abs int) (layer, row, col int) {
+	layer = abs / viaLayerBytes
+	local := abs % viaLayerBytes
+	cellIdx := local / 2
+	return layer, cellIdx / VIACols, cellIdx % VIACols
+}
+
+// GetVIAKeymapBuffer reads a chunk of the flat VIA keymap buffer.
+// VIA addresses the buffer as a single flat array where each layer occupies
+// VIARows*VIACols*2 bytes, so a chunk may span a layer boundary.
+func (d *Device) GetVIAKeymapBuffer(offset, size int) ([]byte, error) {
+	if offset < 0 || size < 0 || offset+size > viaFullBytes {
 		return nil, fmt.Errorf("%w: buffer out of bounds", ErrProtocol)
 	}
-	table, err := d.getLayerTable(layer)
-	if err != nil {
-		return nil, err
-	}
 	buf := make([]byte, size)
-	for i := 0; i < size; i++ {
-		cellIdx := (offset + i) / 2
-		isHi := (offset+i)%2 == 0
-		r, c := cellIdx/VIACols, cellIdx%VIACols
+	cache := make(map[int][]byte, VIALayerCount)
+	for i := 0; i+2 <= size; i += 2 {
+		layer, r, c := absToCell(offset + i)
 		addr, ok := AddrFromVIAMatrix(r, c)
 		if !ok {
-			continue // leave as 0
+			continue // unused cell, leave as 0
+		}
+		table, ok := cache[layer]
+		if !ok {
+			var err error
+			table, err = d.getLayerTable(layer)
+			if err != nil {
+				return nil, err
+			}
+			cache[layer] = table
 		}
 		entry := TableEntry(table, addr)
 		usage := entry.Usage
@@ -245,45 +292,49 @@ func (d *Device) GetVIAKeymapBuffer(layer, offset, size int) ([]byte, error) {
 			usage = defaultUsage[addr]
 		}
 		keycode := UsageToVIAKeycode(usage)
-		if isHi {
-			buf[i] = byte(keycode >> 8)
-		} else {
-			buf[i] = byte(keycode & 0xFF)
-		}
+		buf[i] = byte(keycode >> 8)
+		buf[i+1] = byte(keycode & 0xFF)
 	}
 	return buf, nil
 }
 
-// SetVIAKeymapBuffer writes a chunk of the VIA keymap buffer for a layer.
-func (d *Device) SetVIAKeymapBuffer(layer, offset int, data []byte) error {
-	size := len(data)
-	if offset < 0 || size < 0 || offset+size > VIARows*VIACols*2 {
+// SetVIAKeymapBuffer writes a chunk of the flat VIA keymap buffer.
+// Chunks may span a layer boundary; every touched layer is flushed once.
+func (d *Device) SetVIAKeymapBuffer(offset int, data []byte) error {
+	if offset < 0 || offset+len(data) > viaFullBytes {
 		return fmt.Errorf("%w: buffer out of bounds", ErrProtocol)
 	}
-	table, err := d.getLayerTable(layer)
-	if err != nil {
-		return err
-	}
-	for i := 0; i < size; i += 2 {
-		cellIdx := (offset + i) / 2
-		r, c := cellIdx/VIACols, cellIdx%VIACols
+	tables := make(map[int][]byte, VIALayerCount)
+	var touched []int
+	for i := 0; i+2 <= len(data); i += 2 {
+		layer, r, c := absToCell(offset + i)
 		addr, ok := AddrFromVIAMatrix(r, c)
 		if !ok {
 			continue
 		}
-		var keycode uint16
-		if i+1 < size {
-			keycode = uint16(data[i])<<8 | uint16(data[i+1])
-		} else {
-			keycode = uint16(data[i]) << 8
-		}
+		keycode := uint16(data[i])<<8 | uint16(data[i+1])
 		usage, ok := VIAKeycodeToUsage(keycode)
 		if !ok {
 			continue // skip unsupported keycodes
 		}
+		table, ok := tables[layer]
+		if !ok {
+			var err error
+			table, err = d.getLayerTable(layer)
+			if err != nil {
+				return err
+			}
+			tables[layer] = table
+			touched = append(touched, layer)
+		}
 		SetTableEntry(table, addr, usage)
 	}
-	return d.setLayerTable(layer, table)
+	for _, layer := range touched {
+		if err := d.setLayerTable(layer, tables[layer]); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (d *Device) getLayerTable(layer int) ([]byte, error) {

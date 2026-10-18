@@ -4,6 +4,8 @@ import {
   getTheme,
   KeyboardDefinitionIndex,
   KeyboardDictionary,
+  keyboardDefinitionV2ToVIADefinitionV2,
+  keyboardDefinitionV3ToVIADefinitionV3,
   ThemeDefinition,
 } from '@the-via/reader';
 import {TestKeyboardSoundsMode} from 'src/components/void/test-keyboard-sounds';
@@ -115,6 +117,32 @@ export async function syncStore(): Promise<DefinitionIndex> {
   return currentDefinitionIndex;
 }
 
+/**
+ * Definitions shipped locally are authored in the raw KLE format
+ * (`layouts.keymap`). The app expects the parsed `VIADefinitionV3` shape
+ * (`layouts.keys`, `optionKeys`, ...). Upstream relies on an offline
+ * build step for this; here we do the transform at load time so the
+ * readable KLE files can be committed as-is.
+ */
+export const normalizeDefinition = <T>(
+  definition: T,
+  version: keyof DefinitionVersionMap,
+): T => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const def = definition as any;
+  if (!def || !def.layouts || def.layouts.keys || !def.layouts.keymap) {
+    return definition;
+  }
+  try {
+    return version === 'v3'
+      ? (keyboardDefinitionV3ToVIADefinitionV3(def) as unknown as T)
+      : (keyboardDefinitionV2ToVIADefinitionV2(def) as unknown as T);
+  } catch (e) {
+    console.error('Failed to parse keyboard definition', e);
+    return definition;
+  }
+};
+
 export const getMissingDefinition = async <
   K extends keyof DefinitionVersionMap,
 >(
@@ -124,7 +152,10 @@ export const getMissingDefinition = async <
   const vpid = getVendorProductId(device.vendorId, device.productId);
   const url = `/definitions/${version}/${vpid}.json`;
   const response = await fetch(url);
-  const json: DefinitionVersionMap[K] = await response.json();
+  const json: DefinitionVersionMap[K] = normalizeDefinition(
+    await response.json(),
+    version,
+  );
   let definitions = deviceStore.get('definitions');
   const newDefinitions = {
     ...definitions,
@@ -155,8 +186,20 @@ export const getMissingDefinition = async <
 export const getSupportedIdsFromStore = (): VendorProductIdMap =>
   deviceStore.get('definitionIndex')?.supportedVendorProductIdMap;
 
-export const getDefinitionsFromStore = (): KeyboardDictionary =>
-  deviceStore.get('definitions');
+export const getDefinitionsFromStore = (): KeyboardDictionary => {
+  const definitions: KeyboardDictionary = deviceStore.get('definitions') || {};
+  return Object.entries(definitions).reduce<KeyboardDictionary>(
+    (acc, [vpid, versions]) => {
+      acc[vpid] = {
+        ...versions,
+        v2: normalizeDefinition(versions?.v2, 'v2'),
+        v3: normalizeDefinition(versions?.v3, 'v3'),
+      };
+      return acc;
+    },
+    {},
+  );
+};
 
 export const getThemeFromStore = (): ThemeDefinition =>
   THEMES[getThemeNameFromStore() as keyof typeof THEMES] ||

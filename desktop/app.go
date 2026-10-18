@@ -3,9 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
-	"path/filepath"
-	"time"
 
 	"github.com/Naikelin/atom-he68-pro-configurator/desktop/internal/hid"
 )
@@ -137,14 +134,6 @@ func (a *App) HIDCommand(command int, payload []int) ([]int, error) {
 	for i, v := range resp {
 		respInts[i] = int(v)
 	}
-	go func() {
-		logPath := filepath.Join(os.Getenv("USERPROFILE"), "Documents", "Proyectos", "Atom HE68 PRO", "desktop", "hidcommand.log")
-		f, _ := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-		if f != nil {
-			fmt.Fprintf(f, "%s cmd=0x%02X payload=%v resp=%v\n", time.Now().Format("15:04:05.000"), command, payload, respInts)
-			f.Close()
-		}
-	}()
 	return respInts, nil
 }
 
