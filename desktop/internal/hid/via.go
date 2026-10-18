@@ -138,25 +138,20 @@ func (d *Device) HIDCommand(command byte, payload []byte) ([]byte, error) {
 		return append([]byte{command}, payload...), nil
 
 	case 0x02: // GET_KEYBOARD_VALUE
-		// Return the requested payload with trailing zeros for unsupported values.
-		// Some VIA value IDs expect 4 bytes (e.g. LAYOUT_OPTIONS, KEYCODES_VERSION).
+		// Return a 33-byte HID report (matching VIA's packet size).
+		// VIA reads result bytes at indices [1+bytes.length .. 1+bytes.length+resultLen).
 		valueID := byte(0)
 		if len(payload) > 0 {
 			valueID = payload[0]
 		}
-		resultLen := 1
-		switch valueID {
-		case 0x02: // LAYOUT_OPTIONS
-			resultLen = 4
-		case 0x06: // KEYCODES_VERSION
-			resultLen = 4
-		}
-		res := make([]byte, 1+len(payload)+resultLen)
+		res := make([]byte, 33) // HID report size
 		res[0] = command
-		copy(res[1:], payload)
+		if len(payload) > 0 {
+			res[1] = payload[0]
+		}
 		// KEYCODES_VERSION must be non-zero BCD in the 0x08-0x09 range.
 		if valueID == 0x06 {
-			res[1+len(payload)+resultLen-1] = 0x09
+			res[5] = 0x09 // indices 2-5 = 0x00000009
 		}
 		return res, nil
 
